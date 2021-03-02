@@ -33,7 +33,7 @@ class algo_backend(object):
         try:
             param_dict = await flask_request.json()
             self.res = self._model_inference(param_dict)
-            print("[Request Processed Successfully] Input request: {}   Output Result: {}".format(param_dict, res))
+            print("[Request Processed Successfully] Input request: {}   Output Result: {}".format(param_dict, self.res))
             return {'status': 1, 'result': self.res, 'info':self.info_msg}
         except Exception:
             print("[Request Failed]:")
