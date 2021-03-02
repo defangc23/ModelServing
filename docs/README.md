@@ -2,7 +2,7 @@
 
 # Model Serving 分布式模型服务
 
-This model serving framework is built on top of the distributed library Ray and providing further simplified configurations to parallelize and accelerate machine learning workloads.
+This model serving framework is built on top of the powerful distributed library Ray and providing further simplified configurations to parallelize and accelerate machine learning workloads.
 
 
 
@@ -21,18 +21,19 @@ Project-ready docker image with:
 
 1. Clone the repo
 
-2. Create your project as a python package with this layout:
+2. Create your project as a python package (e.g. *AlgoExample*) under `algopkg` directory with this layout:
 
    ```bash
-   AlgoExample
-       ├── backend.py
-       └── __init__.py
-   
+   algopkg/
+   ├── AlgoExample
+   │   ├── backend.py
+   │   └── __init__.py
+   └── setup.py
    ```
 
-   *AlgoExample* is the name of your package directory. This name is free to modify and suggesting naming by the core algorithm name in your project.  (FaceDetection e.g.)
+   `AlgoExample` is the name of your package directory. This name is free to modify and suggesting naming by the core algorithm name in your project.  (FaceDetection e.g.)  In addition,  your full project dependency modules should under this package directory.
 
-   *backend.py*   This python file is the main entry of your model processing backend in project and the filename should not be altered.  There are a few class methods down below your need to add and modify by referring your own model processing workflow: 
+   `backend.py`   This python file is the main entry of your model processing backend in project and the filename should not be altered.  There are a few class methods down below you need to add and modify referring to your own model processing workflow: 
 
    ```python
    import sys, os, socket, time, traceback
@@ -78,9 +79,17 @@ Project-ready docker image with:
                return {'status': 0, 'info':self.info_msg}
    ```
 
-    
+   <u>*def _model_init(self, model_path)*</u> : Initialize your backend model for long running .
 
-3. 
+   <u>*def _model_inference(self, param_dict)*</u> : grab all parameters you need from `param_dict` and run your model.  When finish, return your model results. (but it's ok to leave it empty ) 
+
+   <u>*class algo_backend(object)*</u> : The class name should be considered to change by your own.
+
+3. Test your package
+
+   check out `./test/algopkg_test.py`  This module can help you check the two methods adding by you and make sure your package can work properly when it is imported by others. 
+
+ 
 
 
 
