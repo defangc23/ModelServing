@@ -1,6 +1,7 @@
 import sys, os, socket, time, traceback
 import numpy as np
-
+import base64
+import cv2
 
 class algo_backend(object):
 
@@ -21,13 +22,20 @@ class algo_backend(object):
         # the user_config field of BackendConfig is updated.
         pass
 
+    def base64_to_img(self, base64_str):
+        img_bytes = base64.b64decode(base64_str)
+        img_list = np.frombuffer(img_bytes, dtype=np.uint8)
+        np_img = cv2.imdecode(img_list, cv2.IMREAD_UNCHANGED)
+        return np_img
+
     def _model_init(self, model_path):
         # Add by user
         pass
 
     def _model_inference(self, param_dict):
-        # Add by user
-        pass
+        base64_img = param_dict['base64_image']
+        np_img = self.base64_to_img(base64_img)
+        return np_img.shape
 
     async def __call__(self, flask_request):
         try:
