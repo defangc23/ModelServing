@@ -11,12 +11,13 @@ class Controller(object):
 
     TAG = "CONTROLLER"
     MODELZOO = os.path.abspath(os.path.join(os.path.dirname(__file__), 'Model_ZOO'))
+    CONFIG = os.path.abspath(os.path.join(os.path.dirname(__file__), 'conf.ini'))
 
-    def __init__(self, conf_path="./conf.ini"):
+    def __init__(self):
         self.log = logger.get_logger(Controller.TAG, level='info')
-        self.log.info("[1/5] Controller Start. config file: {}".format(conf_path))
+        self.log.info("[1/5] Controller Start. config file: {}".format(Controller.CONFIG))
         self.Config = configparser.ConfigParser()
-        self.Config.read(conf_path)
+        self.Config.read(Controller.CONFIG)
         self.log.info("[2/5] Config file loaded.")
         self.__modelserve_conn()
         self.log.info("[3/5] Model Serve connected.")

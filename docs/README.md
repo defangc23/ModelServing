@@ -89,7 +89,65 @@ Project-ready docker image with:
 
    check out `./test/algopkg_test.py`  This module can help you check the two methods adding by you and make sure your package can work properly when it is imported by others. 
 
- 
+4. Deployment
+
+   After making sure your package works, put your model file into `Model_ZOO` folder. Then open `conf.ini` file and edit it:
+   
+   ```ini
+   # fixed section name, don't change
+   [MODEL SERVE] 
+   # port for model serve REST API
+   port = 666         
+   
+   # AlgoExample should be changed by user according to the project dir under algopkg folder
+   [algopkg.AlgoExample]
+   # algo_backend is your class name in ./algopkg/AlgoExample/backend.py
+   backend = algo_backend
+   # algoexample_model_v1.pb is your model filename in Model_ZOO
+   model = algoexample_model_v1.pb
+   # numbers of your specified model paralleled running in backend 
+   replicas = 1
+   # the gpu fraction of usage for one single model
+   gpu_cost = 1
+   # route for model serve REST API
+   route = extract
+   # request method for model serve REST API
+   method = POST
+   ```
+   
+   You can add more different sections in this config file which sets different types of models running simultaneously.
+
+5. Run
+
+   Everytime you add or modify `conf.ini`, simply run `controller.py` . It will set all for you.
+
+   The request REST API URL should be like http://host_ip_address:port/route  with JSON parameters in the body of your request by default. 
+
+   Dashboard: http://host_ip_address:8265
+
+   Before running `controller.py`, please make sure your Ray serve has been all set. 
+
+   
+
+   **Docker Setups:**
+
+   ```bash
+   # Host
+   docker run --shm-size=4G -d \
+              -v your-modelserve-path:/opt/modelserve/ \
+              --net=host --name=modelserve_host \
+              your-docker-image \
+              ray start --head --port=6370 --dashboard-host 0.0.0.0 --block
+   # Worker
+   docker run --shm-size=4G -d --gpus all\
+              -v your-modelserve-path:/opt/modelserve/ \
+              --net=host --name=modelserve_worker_1 \
+              your-docker-image \
+              ray start --address='hostIP:6370' --block
+            
+   ```
+
+   use `docker exec` to run controller.py
 
 
 
@@ -97,33 +155,21 @@ Project-ready docker image with:
 
 
 
-1. docker run --shm-size=4G -it --rm --gpus all -v /:/mnt --net host --name fang_modelserving -e TZ="Asia/Shanghai" eum814/deep_env:latest bash
-2. vim /etc/ssh/sshd_config 修改docker的22端口, 因为docker直接使用了系统网络模式
-3. pip install "ray[serve]" -i https://mirrors.aliyun.com/pypi/simple/
-4. /etc/init.d/ssh restart
+1. screen -S modelserving
 
-### host
+2. docker run --shm-size=4G -it --rm --gpus all -v /:/mnt --net host --name fang_modelserving -e TZ="Asia/Shanghai" deep_env:v1 bash
+
+3. vim /etc/ssh/sshd_config 修改docker的22端口, 因为docker直接使用了系统网络模式
+
+4. pip install ray[serve]==1.2.0 -i https://mirrors.aliyun.com/pypi/simple/
+
+5. /etc/init.d/ssh restart
+
+   
+
+### host 
 ray start --head --port=6370 --dashboard-host 0.0.0.0
-### client
-ray start --address='172.16.124.76:6370'
+### join worker
+ray start --address='hostIP:6370'
 
 
-
-
-
-## Deployment
-
-
-
-### Ray Server
-
-docker run --shm-size=4G -d \
-           --net=host --name=ray-server \
-           rayproject/ray:1.2.0-gpu \
-           ray start --head --port=6370 --dashboard-host 0.0.0.0 --block
-
-### Ray Client
-docker run --shm-size=4G -d --gpus all\
-           --net=host --name=ray-client2 \
-           rayproject/ray:1.2.0-gpu \
-           ray start --address='172.16.124.76:6370' --block
