@@ -133,20 +133,22 @@ Project-ready docker image with:
 
    ```bash
    # Host
-   docker run --shm-size=4G -d \
+   docker run --shm-size=4G -d --gpus all \
+              -e TZ="Asia/Shanghai" \
               -v your-modelserve-path:/opt/modelserve/ \
               --net=host --name=modelserve_host \
               your-docker-image \
               ray start --head --port=6370 --dashboard-host 0.0.0.0 --block
    # Worker
-   docker run --shm-size=4G -d --gpus all\
+   docker run --shm-size=4G -d --gpus all \
+              -e TZ="Asia/Shanghai" \
               -v your-modelserve-path:/opt/modelserve/ \
               --net=host --name=modelserve_worker_1 \
               your-docker-image \
               ray start --address='hostIP:6370' --block
-            
+         
    ```
-
+   
    use `docker exec` to run controller.py
 
 

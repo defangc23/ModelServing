@@ -55,7 +55,7 @@ class Controller(object):
                 AlgoDiff.append(AlgoName)
                 continue
             # check gpu cost
-            if not self.RunningBackend[Backend].user_config.get('gpu_cost') == AlgoConf['gpu_cost']:
+            if not self.RunningBackend[Backend].user_config.get('gpu_cost') == float(AlgoConf['gpu_cost']):
                 AlgoDiff.append(AlgoName)
                 continue
             # check model
@@ -78,9 +78,9 @@ class Controller(object):
                                                    backend_func=backend_cls,
                                                    model_path=os.path.join(Controller.MODELZOO, AlgoConf['model']),
                                                    config={"num_replicas": AlgoConf['replicas']},
-                                                   gpu_config={"num_gpus": int(AlgoConf['gpu_cost'])})
+                                                   gpu_config={"num_gpus": float(AlgoConf['gpu_cost'])})
                     self.ModelServe.backend_updateconf(backend_name=Backend,
-                                                       user_config={'gpu_cost': AlgoConf['gpu_cost'],
+                                                       user_config={'gpu_cost': float(AlgoConf['gpu_cost']),
                                                                     'model': AlgoConf['model']})
                     self.ModelServe.endpoint_create(endpoint_name=AlgoName,
                                                     backend=Backend,
