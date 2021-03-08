@@ -33,9 +33,8 @@ class algo_backend(object):
         pass
 
     def _model_inference(self, param_dict):
-        base64_img = param_dict['base64_image']
-        np_img = self.base64_to_img(base64_img)
-        return np_img.shape
+        # Add by user
+        pass
 
     async def __call__(self, flask_request):
         try:
