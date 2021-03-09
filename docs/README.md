@@ -19,7 +19,7 @@ Project-ready docker image with:
 
 ### Installation
 
-1. Clone the repo
+1. Clone the repo 
 
 2. Create your project as a python package (e.g. *AlgoExample*) under `algopkg` directory with this layout:
 
@@ -31,9 +31,9 @@ Project-ready docker image with:
    └── setup.py
    ```
 
-   `AlgoExample` is the name of your package directory. This name is free to modify and suggesting naming by the core algorithm name in your project.  (FaceDetection e.g.)  In addition,  your full project dependency modules should under this package directory.
+   `AlgoExample` is the name of your package directory. This name is free to modify and suggesting naming by the core algorithm in your project.  (FaceDetection e.g.)  In addition,  your full project dependency modules should under this package directory.
 
-   `backend.py`   This python file is the main entry of your model processing backend in project and the filename should not be altered.  There are a few class methods down below you need to add and modify referring to your own model processing workflow: 
+   `backend.py`   This python file is the main entry of your model processing backend in project and the filename should not be altered.  There are only a few methods and names you need to add and modify down below referring to your own model processing workflow: 
 
    ```python
    import sys, os, socket, time, traceback
@@ -79,20 +79,30 @@ Project-ready docker image with:
                return {'status': 0, 'info':self.info_msg}
    ```
 
-   <u>*def _model_init(self, model_path)*</u> : Initialize your backend model for long running .
+   Add or change by user:
 
-   <u>*def _model_inference(self, param_dict)*</u> : grab all parameters you need from `param_dict` and run your model.  When finish, return your model results. (but it's ok to leave it empty ) 
+   `def _model_init(self, model_path)` : Initialize and load your backend model for long running .
 
-   <u>*class algo_backend(object)*</u> : The class name should be considered to change by your own.
+   `def _model_inference(self, param_dict)` : grab all parameters you need from param_dict and run your model.  When finish, return your model results. (but it's ok to leave it empty ) 
+
+   `class algo_backend(object)` : The class name should be considered to change by your own.
 
 3. Test your package
 
-   check out `./test/algopkg_test.py`  This module can help you check the two methods adding by you and make sure your package can work properly when it is imported by others. 
+   check out `./test/algopkg_test.py`  This module can help you check the two methods adding by you and make sure your package can work properly when it is imported by others. Before running this unitest, you only need to change some global variables in this test script:
+
+   ```python
+   ''' Change by user '''
+   ALGO_PKG_NAME = 'AlgoExample'
+   BACKEND_CLS_NAME = 'algo_backend'
+   MODEL_ABS_PATH = '/Model_ZOO/algoexample_model_v1.pb'
+   PARAM_DICT = {}
+   ```
 
 4. Deployment
 
    After making sure your package works, put your model file into `Model_ZOO` folder. Then open `conf.ini` file and edit it:
-   
+
    ```ini
    # fixed section name, don't change
    [MODEL SERVE] 
@@ -114,44 +124,72 @@ Project-ready docker image with:
    # request method for model serve REST API
    method = POST
    ```
-   
+
    You can add more different sections in this config file which sets different types of models running simultaneously.
 
 5. Run
 
-   Everytime you add or modify `conf.ini`, simply run `controller.py` . It will set all for you.
+   Everytime you modify `conf.ini`, simply run `controller.py` . It will immediately take effect on the running backends with your new settings.
 
-   The request REST API URL should be like http://host_ip_address:port/route  with JSON parameters in the body of your request by default. 
+   The request REST API URL should be like http://headnode_IP:port/route  with JSON parameters in the body of your request by default. 
 
-   Dashboard: http://host_ip_address:8265
+   Dashboard: http://headnode_IP:8265
 
    Before running `controller.py`, please make sure your Ray serve has been all set. 
 
    
 
-   **Docker Setups:**
+**Local Setups:**
 
-   ```bash
-   # Host
-   docker run --shm-size=4G -d --gpus all \
-              -e TZ="Asia/Shanghai" \
-              -v your-modelserve-path:/opt/modelserve/ \
-              --net=host --name=modelserve_host \
-              your-docker-image \
-              ray start --head --port=6370 --dashboard-host 0.0.0.0 --block
-   # Worker
-   docker run --shm-size=4G -d --gpus all \
-              -e TZ="Asia/Shanghai" \
-              -v your-modelserve-path:/opt/modelserve/ \
-              --net=host --name=modelserve_worker_1 \
-              your-docker-image \
-              ray start --address='hostIP:6370' --block
-         
-   ```
-   
-   use `docker exec` to run controller.py
+```bash
+# Install Ray[serve] on your local machine
+pip install ray[serve]==1.2.0
+
+# head node
+ray start --head --port=6370 --dashboard-host 0.0.0.0
+
+# worker node
+ray start --address='headnode_IP:6370'
+
+# run controller.py
+python controller.py
+```
 
 
+
+**Docker Setups:**
+
+```bash
+# Install Ray[serve] in your docker image (Dockerfile)
+
+# Host node
+docker run --shm-size=4G -d --gpus all \
+           -e TZ="Asia/Shanghai" \
+           -v your-modelserve-path:/opt/modelserve/ \
+           -w /opt/modelserve/ \
+           --net=host --name=modelserve_head \
+           your-docker-image \
+           ray start --head --port=6370 --dashboard-host 0.0.0.0 --block
+           
+# Worker node
+docker run --shm-size=4G -d --gpus all \
+           -e TZ="Asia/Shanghai" \
+           -v your-modelserve-path:/opt/modelserve/ \
+           -w /opt/modelserve/ \
+           --net=host --name=modelserve_worker_1 \
+           your-docker-image \
+           ray start --address='hostIP:6370' --block
+
+# run controller.py using docker
+docker exec -d modelserve_head python controller.py
+```
+
+6. Test your REST API
+
+   check out `./test/server_test.py` You can send your request and test the response from server. 
+
+> If you need to modify your code in your algopkg, please firstly stop the serve using command "ray stop",  then start the serve and run controller.py
+>
 
 ## Debug
 
@@ -161,17 +199,16 @@ Project-ready docker image with:
 
 2. docker run --shm-size=4G -it --rm --gpus all -v /:/mnt --net host --name fang_modelserving -e TZ="Asia/Shanghai" deep_env:v1 bash
 
-3. vim /etc/ssh/sshd_config 修改docker的22端口, 因为docker直接使用了系统网络模式
+3. vim /etc/ssh/sshd_config 修改docker的22端口, 因为docker直接使用了系统网络模式无法通过ssh调试程序
 
 4. pip install ray[serve]==1.2.0 -i https://mirrors.aliyun.com/pypi/simple/
 
 5. /etc/init.d/ssh restart
 
-   
+6. ray start --head --port=6370 --dashboard-host 0.0.0.0
 
-### host 
-ray start --head --port=6370 --dashboard-host 0.0.0.0
-### join worker
-ray start --address='hostIP:6370'
+7. ctrl a + d  detach screen
+
+   
 
 

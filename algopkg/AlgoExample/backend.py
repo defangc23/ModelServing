@@ -43,8 +43,8 @@ class algo_backend(object):
             print("[Request Processed Successfully] Input request: {}   Output Result: {}".format(param_dict, self.res))
             return {'status': 1, 'result': self.res, 'info':self.info_msg}
         except Exception:
-            print("[Request Failed]:")
-            traceback.print_exc()
-            return {'status': 0, 'info':self.info_msg}
+            error_info = traceback.format_exc()
+            print("[Request Failed]: {}".format(error_info))
+            return {'status': 0, 'info':self.info_msg + error_info}
 
 
