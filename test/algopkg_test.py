@@ -1,3 +1,5 @@
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+import algopkg
 import os, sys
 import unittest
 import importlib
@@ -15,8 +17,6 @@ class TestAlgopkg(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-        import algopkg
         backend_py = importlib.import_module(f"algopkg.{ALGO_PKG_NAME}.backend")
         cls.backend_cls = getattr(backend_py, f"{BACKEND_CLS_NAME}")
 

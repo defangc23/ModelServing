@@ -2,7 +2,8 @@ import cv2
 import base64
 import numpy as np
 
-def img_to_base64(image):
+def img_to_base64(image_path):
+    image = cv2.imread(image_path)
     base64_str = base64.b64encode(cv2.imencode('.jpg', image)[1]).decode()
     return base64_str
 
