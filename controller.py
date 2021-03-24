@@ -74,11 +74,20 @@ class Controller(object):
                     Backend = AlgoConf['backend']
                     backend_py = importlib.import_module(f"algopkg.{AlgoName}.backend")
                     backend_cls = getattr(backend_py, f"{Backend}")
-                    self.ModelServe.backend_create(backend_name=Backend,
-                                                   backend_func=backend_cls,
-                                                   model_path=os.path.join(Controller.MODELZOO, AlgoConf['model']),
-                                                   config={"num_replicas": AlgoConf['replicas']},
-                                                   gpu_config={"num_gpus": float(AlgoConf['gpu_cost'])})
+
+                    if len(AlgoConf['model'].strip()) == 0:
+                        self.ModelServe.backend_create(backend_name=Backend,
+                                                       backend_func=backend_cls,
+                                                       model_path='',
+                                                       config={"num_replicas": AlgoConf['replicas']},
+                                                       gpu_config={"num_gpus": float(AlgoConf['gpu_cost'])})
+                    else:
+                        self.ModelServe.backend_create(backend_name=Backend,
+                                                       backend_func=backend_cls,
+                                                       model_path=Controller.MODELZOO +','+ AlgoConf['model'],
+                                                       config={"num_replicas": AlgoConf['replicas']},
+                                                       gpu_config={"num_gpus": float(AlgoConf['gpu_cost'])})
+
                     self.ModelServe.backend_updateconf(backend_name=Backend,
                                                        user_config={'gpu_cost': float(AlgoConf['gpu_cost']),
                                                                     'model': AlgoConf['model']})

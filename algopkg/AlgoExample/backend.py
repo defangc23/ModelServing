@@ -9,9 +9,17 @@ class algo_backend(object):
         try:
             self.res = None
             self.info_msg = "Result from {}".format(socket.gethostname())
-            assert os.path.exists(model_path) == True, "Model Not Found"
-            self._model_init(model_path)
-            print("[Model Initialized Successfully] load model from : {}".format(model_path))
+            if len(model_path) == 0:
+                self._model_init()
+                print("[Model Initialized Successfully] No model path specified")
+            else:
+                model_info_lst = model_path.split(',')
+                modelzoo_path = model_info_lst.pop(0).strip()
+                model_path_lst = [os.path.join(modelzoo_path, model.strip()) for model in model_info_lst if len(model) != 0]
+                for p in model_path_lst:
+                    assert os.path.exists(p) == True, "Model Not Found"
+                self._model_init(model_path_lst)
+                print("[Model Initialized Successfully] load model from : {}".format(model_path))
         except Exception:
             print("[Model Initialized Failed]:")
             traceback.print_exc()
@@ -28,7 +36,7 @@ class algo_backend(object):
         np_img = cv2.imdecode(img_list, cv2.IMREAD_UNCHANGED)
         return np_img
 
-    def _model_init(self, model_path):
+    def _model_init(self, model_path_lst=None):
         # Add by user
         pass
 

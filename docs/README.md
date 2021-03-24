@@ -38,7 +38,7 @@ Project-ready docker image with:
    ```python
    import sys, os, socket, time, traceback
    import numpy as np
-   
+   import cv2
    
    class algo_backend(object):
    
@@ -46,9 +46,17 @@ Project-ready docker image with:
            try:
                self.res = None
                self.info_msg = "Result from {}".format(socket.gethostname())
-               assert os.path.exists(model_path) == True, "Model Not Found"
-               self._model_init(model_path)
-               print("[Model Initialized Successfully] load model from : {}".format(model_path))
+               if len(model_path) == 0:
+                   self._model_init()
+                   print("[Model Initialized Successfully] No model path specified")
+               else:
+                   model_info_lst = model_path.split(',')
+                   modelzoo_path = model_info_lst.pop(0).strip()
+                   model_path_lst = [os.path.join(modelzoo_path, model.strip()) for model in model_info_lst if len(model) != 0]
+                   for p in model_path_lst:
+                       assert os.path.exists(p) == True, "Model Not Found"
+                   self._model_init(model_path_lst)
+                   print("[Model Initialized Successfully] load model from : {}".format(model_path))
            except Exception:
                print("[Model Initialized Failed]:")
                traceback.print_exc()
@@ -59,12 +67,12 @@ Project-ready docker image with:
            # the user_config field of BackendConfig is updated.
            pass
    
-       def _model_init(self, model_path):
-           '''Add by user'''
+       def _model_init(self, model_path_lst=None):
+           # Add by user
            pass
    
        def _model_inference(self, param_dict):
-           '''Add by user'''
+           # Add by user
            pass
    
        async def __call__(self, flask_request):
@@ -74,9 +82,9 @@ Project-ready docker image with:
                print("[Request Processed Successfully] Input request: {}   Output Result: {}".format(param_dict, self.res))
                return {'status': 1, 'result': self.res, 'info':self.info_msg}
            except Exception:
-               print("[Request Failed]:")
-               traceback.print_exc()
-               return {'status': 0, 'info':self.info_msg}
+               error_info = traceback.format_exc()
+               print("[Request Failed]: {}".format(error_info))
+               return {'status': 0, 'info':self.info_msg + error_info}
    ```
 
    Add or change by user:
@@ -113,9 +121,9 @@ Project-ready docker image with:
    [algopkg.AlgoExample]
    # algo_backend is your class name in ./algopkg/AlgoExample/backend.py
    backend = algo_backend
-   # algoexample_model_v1.pb is your model filename in Model_ZOO
+   # algoexample_model_v1.pb is your model filename in Model_ZOO, you can add multiple models separate with commas or leave it empty 
    model = algoexample_model_v1.pb
-   # numbers of your specified model paralleled running in backend 
+   # numbers of your specified model paralleled running in backend, caution: cpu cores is the upper bound for this setting
    replicas = 1
    # the gpu fraction of usage for one single model
    gpu_cost = 1
@@ -190,6 +198,8 @@ docker exec -d modelserve_head python controller.py
 
 > If you need to modify your code in your algopkg, please firstly stop the serve using command "ray stop",  then start the serve and run controller.py
 >
+
+
 
 ## Debug
 
