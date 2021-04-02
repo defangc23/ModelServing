@@ -24,11 +24,11 @@ class RAY(object):
         nodes_info = ray.nodes()
         try:
             self.client = serve.start(http_options={"location": "EveryNode", "host":"0.0.0.0", "port":port}, detached=True)
-            self.log.info("Connected existing Ray serve, node number: {} \n Nodes Info: {}".format(len(nodes_info), nodes_info))
+            self.log.info("Ray serve initialized, node number: {} \n Nodes Info: {}".format(len(nodes_info), nodes_info))
 
         except RayServeException:
             self.client = serve.connect()
-            self.log.info("Ray serve initialized, node number: {} \n Nodes Info: {}".format(len(nodes_info), nodes_info))
+            self.log.info("Connected existing Ray serve, node number: {} \n Nodes Info: {}".format(len(nodes_info), nodes_info))
 
     def shutdown(self):
         self.client.shutdown()
@@ -37,14 +37,13 @@ class RAY(object):
     def backend_list(self):
         return self.client.list_backends()
 
-    def backend_create(self, backend_name, backend_func, model_path, config, gpu_config):
+    def backend_create(self, backend_name, backend_func, model_path, replicas, gpu_cost, conda_env):
         if model_path is None:
-            self.client.create_backend(backend_name, backend_func, config=config, ray_actor_options=gpu_config)
-            self.log.info("Backend created, backend_name:{}, func:{}, {}, {}".format(backend_name, backend_func, config, gpu_config))
+            self.client.create_backend(backend_name, backend_func, model_path="", config={"num_replicas": replicas}, ray_actor_options={"num_gpus": gpu_cost, "runtime_env": {"conda": conda_env}})
+            self.log.info("Backend created, backend_name:{}, func:{}, model:{}, replicas:{}, gpu_cost:{}, conda_env:{}".format(backend_name, backend_func, model_path, replicas, gpu_cost, conda_env))
         else:
-            self.client.create_backend(backend_name, backend_func, model_path, config=config, ray_actor_options=gpu_config)
-            self.log.info("Backend created, backend_name:{}, model:{}, func:{}, {}, {}".format(backend_name, backend_func, model_path,
-                                                                                               config, gpu_config))
+            self.client.create_backend(backend_name, backend_func, model_path=model_path, config={"num_replicas": replicas}, ray_actor_options={"num_gpus": gpu_cost, "runtime_env": {"conda": conda_env}})
+            self.log.info("Backend created, backend_name:{}, func:{}, model:{}, replicas:{}, gpu_cost:{}, conda_env:{}".format(backend_name, backend_func, model_path, replicas, gpu_cost, conda_env))
 
     def backend_delete(self, backend_name):
         self.client.delete_backend(backend_name)

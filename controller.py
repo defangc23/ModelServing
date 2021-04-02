@@ -51,11 +51,11 @@ class Controller(object):
                 AlgoDiff.append(AlgoName)
                 continue
             # check replicate
-            if not self.RunningBackend[Backend].num_replicas == int(AlgoConf['replicas']):
+            if not int(self.RunningBackend[Backend].num_replicas) == int(AlgoConf['replicas']):
                 AlgoDiff.append(AlgoName)
                 continue
             # check gpu cost
-            if not self.RunningBackend[Backend].user_config.get('gpu_cost') == float(AlgoConf['gpu_cost']):
+            if not float(self.RunningBackend[Backend].user_config.get('gpu_cost')) == float(AlgoConf['gpu_cost']):
                 AlgoDiff.append(AlgoName)
                 continue
             # check model
@@ -79,14 +79,16 @@ class Controller(object):
                         self.ModelServe.backend_create(backend_name=Backend,
                                                        backend_func=backend_cls,
                                                        model_path='',
-                                                       config={"num_replicas": AlgoConf['replicas']},
-                                                       gpu_config={"num_gpus": float(AlgoConf['gpu_cost'])})
+                                                       replicas=float(AlgoConf['replicas']),
+                                                       gpu_cost=float(AlgoConf['gpu_cost']),
+                                                       conda_env=AlgoName)
                     else:
                         self.ModelServe.backend_create(backend_name=Backend,
                                                        backend_func=backend_cls,
                                                        model_path=Controller.MODELZOO +','+ AlgoConf['model'],
-                                                       config={"num_replicas": AlgoConf['replicas']},
-                                                       gpu_config={"num_gpus": float(AlgoConf['gpu_cost'])})
+                                                       replicas=float(AlgoConf['replicas']),
+                                                       gpu_cost=float(AlgoConf['gpu_cost']),
+                                                       conda_env=AlgoName)
 
                     self.ModelServe.backend_updateconf(backend_name=Backend,
                                                        user_config={'gpu_cost': float(AlgoConf['gpu_cost']),

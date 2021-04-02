@@ -1,3 +1,4 @@
+import sys, os
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 import requests, json, unittest
 
@@ -9,7 +10,7 @@ PARAM_DICT = {}
 
 class TestServer(unittest.TestCase):
     def test_REST(self):
-        response = requests.post(REQUEST_URL, json=PARAM_DICT)
+        response = requests.get(REQUEST_URL, json=PARAM_DICT)
         res = response.json()
         print(res)
         self.assertEqual(res["status"], 1)

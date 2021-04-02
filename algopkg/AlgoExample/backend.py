@@ -1,7 +1,6 @@
 import sys, os, socket, time, traceback
 import numpy as np
 import base64
-import cv2
 
 class algo_backend(object):
 
@@ -31,6 +30,7 @@ class algo_backend(object):
         pass
 
     def base64_to_img(self, base64_str):
+        import cv2
         img_bytes = base64.b64decode(base64_str)
         img_list = np.frombuffer(img_bytes, dtype=np.uint8)
         np_img = cv2.imdecode(img_list, cv2.IMREAD_UNCHANGED)
@@ -44,9 +44,9 @@ class algo_backend(object):
         # Add by user
         pass
 
-    async def __call__(self, flask_request):
+    async def __call__(self, starlette_request):
         try:
-            param_dict = await flask_request.json()
+            param_dict = await starlette_request.json()
             self.res = self._model_inference(param_dict)
             print("[Request Processed Successfully] Input request: {}   Output Result: {}".format(param_dict, self.res))
             return {'status': 1, 'result': self.res, 'info':self.info_msg}

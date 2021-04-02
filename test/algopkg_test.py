@@ -1,9 +1,9 @@
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-import algopkg
 import os, sys
 import unittest
 import importlib
 import numpy as np
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+import algopkg
 
 
 ''' Change by user '''
