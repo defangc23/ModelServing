@@ -5,7 +5,6 @@ from ray.serve.exceptions import RayServeException
 import requests
 import traceback
 from io import BytesIO
-from PIL import Image
 import sys, os, logging
 
 class RAY(object):

@@ -9,7 +9,7 @@ import algopkg
 ''' Change by user '''
 ALGO_PKG_NAME = 'AlgoExample'
 BACKEND_CLS_NAME = 'algo_backend'
-MODEL_ABS_PATH = '/mnt/media/users/fangcheng/remote_deploy/ModelServing/Model_ZOO/algoexample_model_v1.pb'
+MODEL_ABS_PATH = '/mnt/opt/ModelServing/Model_ZOO/algoexample_model_v1.pb'
 PARAM_DICT = {}
 
 

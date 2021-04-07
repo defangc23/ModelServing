@@ -14,8 +14,8 @@ This model serving framework is built on top of the powerful distributed library
 
 Project-ready docker image with:
 
-- python >= 3.6
-- ray[serve] == 1.2.0
+- python == 3.6
+- ray[serve] == 2.0.0 dev0
 
 ### Installation
 
@@ -26,9 +26,8 @@ Project-ready docker image with:
    ```bash
    algopkg/
    ├── AlgoExample
-   │   ├── backend.py
-   │   └── __init__.py
-   └── setup.py
+       ├── backend.py
+       └── __init__.py
    ```
 
    `AlgoExample` is the name of your package directory. This name is free to modify and suggesting naming by the core algorithm in your project.  (FaceDetection e.g.)  In addition,  your full project dependency modules should under this package directory.
@@ -38,7 +37,6 @@ Project-ready docker image with:
    ```python
    import sys, os, socket, time, traceback
    import numpy as np
-   import cv2
    
    class algo_backend(object):
    
@@ -75,9 +73,9 @@ Project-ready docker image with:
            # Add by user
            pass
    
-       async def __call__(self, flask_request):
+       async def __call__(self, starlette_request):
            try:
-               param_dict = await flask_request.json()
+               param_dict = await starlette_request.json()
                self.res = self._model_inference(param_dict)
                print("[Request Processed Successfully] Input request: {}   Output Result: {}".format(param_dict, self.res))
                return {'status': 1, 'result': self.res, 'info':self.info_msg}
@@ -94,6 +92,8 @@ Project-ready docker image with:
    `def _model_inference(self, param_dict)` : grab all parameters you need from param_dict and run your model.  When finish, return your model results. (but it's ok to leave it empty ) 
 
    `class algo_backend(object)` : The class name should be considered to change by your own.
+
+   ***Caution*: Please import your dependencies within these method functions** 
 
 3. Test your package
 
@@ -119,7 +119,7 @@ Project-ready docker image with:
    
    # AlgoExample should be changed by user according to the project dir under algopkg folder
    [algopkg.AlgoExample]
-   # algo_backend is your class name in ./algopkg/AlgoExample/backend.py
+   # algo_backend is your class name in script: ./algopkg/AlgoExample/backend.py
    backend = algo_backend
    # algoexample_model_v1.pb is your model filename in Model_ZOO, you can add multiple models separate with commas or leave it empty 
    model = algoexample_model_v1.pb
@@ -129,15 +129,65 @@ Project-ready docker image with:
    gpu_cost = 1
    # route for model serve REST API
    route = extract
-   # request method for model serve REST API
-   method = POST
+   # request method for model serve REST API, please use default GET with json params
+   method = GET
    ```
 
    You can add more different sections in this config file which sets different types of models running simultaneously.
 
-5. Run
+   
 
-   Everytime you modify `conf.ini`, simply run `controller.py` . It will immediately take effect on the running backends with your new settings.
+5. Start your server
+
+   ```bash
+   # move your repo in /opt/modelserve/ 
+   
+   # docker pull eum814/modelserve_env:latest
+   # check out the dockerfile: https://hub.docker.com/r/eum814/modelserve_env
+   
+   # Head node
+   docker run --shm-size=4G -d --gpus all \
+              -e TZ="Asia/Shanghai" \
+              -v /:/mnt \
+              -w /mnt/opt/modelserve/ \
+              --net=host --name=modelserve_head \
+              eum814/modelserve_env:latest \
+              conda run -n AlgoExample ray start --head --port=6370 --dashboard-host 0.0.0.0 --block
+   
+   # Worker node
+   docker run --shm-size=4G -d --gpus all \
+              -e TZ="Asia/Shanghai" \
+              -v /:/mnt \
+              -w /mnt/opt/modelserve/ \
+              --net=host --name=modelserve_worker_1 \
+              eum814/modelserve_env:latest \
+              conda run -n AlgoExample ray start --address='HeadNode_IP:6370' --block
+   ```
+
+   
+
+6. Build your Conda env
+
+   Each Algo package you created should have its own virtual environment to support algo backends with different (possibly conflicting) python dependencies. Conda env has already been installed in ModelServing docker image with one existing conda env named `AlgoExample`. And conda env `AlgoExample` has two functions : 1. from last step your server has started based on this conda env.   2. To build your conda env, you need to clone this env and rename it with your algo package name. To be more specific, please follow these steps to build your own conda env :
+
+   ```bash
+   # after starting your server, enter modelserving container in each node
+   docker exec -it modelserve_head bash        # HeadNode
+   docker exec -it modelserve_worker_1 bash    # WorkerNode
+   
+   # create your conda env
+   conda create -n YourAlgoPackageName --clone AlgoExample
+   
+   # enter your env and install your dependencies
+   conda activate YourAlgoPackageName
+   pip install -r requirements.txt
+   ```
+
+   
+
+7. Run your package
+
+   Everytime you modify `conf.ini`, simply run `controller.py`  in your conda env. It will immediately take effect on the running backends with your new settings.
 
    The request REST API URL should be like http://headnode_IP:port/route  with JSON parameters in the body of your request by default. 
 
@@ -145,52 +195,7 @@ Project-ready docker image with:
 
    Before running `controller.py`, please make sure your Ray serve has been all set. 
 
-   
 
-**Local Setups:**
-
-```bash
-# Install Ray[serve] on your local machine
-pip install ray[serve]==1.2.0
-
-# head node
-ray start --head --port=6370 --dashboard-host 0.0.0.0
-
-# worker node
-ray start --address='headnode_IP:6370'
-
-# run controller.py
-python controller.py
-```
-
-
-
-**Docker Setups:**
-
-```bash
-# Install Ray[serve] in your docker image (Dockerfile)
-
-# Host node
-docker run --shm-size=4G -d --gpus all \
-           -e TZ="Asia/Shanghai" \
-           -v your-modelserve-path:/opt/modelserve/ \
-           -w /opt/modelserve/ \
-           --net=host --name=modelserve_head \
-           your-docker-image \
-           ray start --head --port=6370 --dashboard-host 0.0.0.0 --block
-           
-# Worker node
-docker run --shm-size=4G -d --gpus all \
-           -e TZ="Asia/Shanghai" \
-           -v your-modelserve-path:/opt/modelserve/ \
-           -w /opt/modelserve/ \
-           --net=host --name=modelserve_worker_1 \
-           your-docker-image \
-           ray start --address='hostIP:6370' --block
-
-# run controller.py using docker
-docker exec -d modelserve_head python controller.py
-```
 
 6. Test your REST API
 
@@ -205,20 +210,13 @@ docker exec -d modelserve_head python controller.py
 
 
 
-1. screen -S modelserving
-
-2. docker run --shm-size=4G -it --rm --gpus all -v /:/mnt --net host --name fang_modelserving -e TZ="Asia/Shanghai" deep_env:v1 bash
+1. docker exec -it 进入container 
 
 3. vim /etc/ssh/sshd_config 修改docker的22端口, 因为docker直接使用了系统网络模式无法通过ssh调试程序
 
-4. pip install ray[serve]==1.2.0 -i https://mirrors.aliyun.com/pypi/simple/
-
-5. /etc/init.d/ssh restart
-
-6. ray start --head --port=6370 --dashboard-host 0.0.0.0
-
-7. ctrl a + d  detach screen
+3. /etc/init.d/ssh restart
 
    
+
 
 

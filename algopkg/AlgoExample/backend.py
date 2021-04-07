@@ -1,6 +1,5 @@
 import sys, os, socket, time, traceback
 import numpy as np
-import base64
 
 class algo_backend(object):
 
@@ -30,7 +29,7 @@ class algo_backend(object):
         pass
 
     def base64_to_img(self, base64_str):
-        import cv2
+        import cv2, base64
         img_bytes = base64.b64decode(base64_str)
         img_list = np.frombuffer(img_bytes, dtype=np.uint8)
         np_img = cv2.imdecode(img_list, cv2.IMREAD_UNCHANGED)
