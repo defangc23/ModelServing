@@ -38,10 +38,10 @@ class RAY(object):
 
     def backend_create(self, backend_name, backend_func, model_path, replicas, gpu_cost, conda_env):
         if model_path is None:
-            self.client.create_backend(backend_name, backend_func, model_path="", config={"num_replicas": replicas}, ray_actor_options={"num_gpus": gpu_cost, "runtime_env": {"conda": conda_env}})
+            self.client.create_backend(backend_name, backend_func, "", config={"num_replicas": replicas}, ray_actor_options={"num_gpus": gpu_cost, "runtime_env": {"conda": conda_env}})
             self.log.info("Backend created, backend_name:{}, func:{}, model:{}, replicas:{}, gpu_cost:{}, conda_env:{}".format(backend_name, backend_func, model_path, replicas, gpu_cost, conda_env))
         else:
-            self.client.create_backend(backend_name, backend_func, model_path=model_path, config={"num_replicas": replicas}, ray_actor_options={"num_gpus": gpu_cost, "runtime_env": {"conda": conda_env}})
+            self.client.create_backend(backend_name, backend_func, model_path, config={"num_replicas": replicas}, ray_actor_options={"num_gpus": gpu_cost, "runtime_env": {"conda": conda_env}})
             self.log.info("Backend created, backend_name:{}, func:{}, model:{}, replicas:{}, gpu_cost:{}, conda_env:{}".format(backend_name, backend_func, model_path, replicas, gpu_cost, conda_env))
 
     def backend_delete(self, backend_name):

@@ -17,7 +17,7 @@ class algo_backend(object):
                 for p in model_path_lst:
                     assert os.path.exists(p) == True, "Model Not Found"
                 self._model_init(model_path_lst)
-                print("[Model Initialized Successfully] load model from : {}".format(model_path))
+                print("[Model Initialized Successfully] load model from : {}".format(model_path_lst))
         except Exception:
             print("[Model Initialized Failed]:")
             traceback.print_exc()

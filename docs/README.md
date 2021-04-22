@@ -12,27 +12,35 @@ This model serving framework is built on top of the powerful distributed library
 
 ### Prerequisites
 
-Project-ready docker image with:
+Project-ready docker image already integrated with:
 
 - python == 3.6
 - ray[serve] == 2.0.0 dev0
+
+you should do is freezing your algorithm dependencies as requirements.txt
 
 ### Installation
 
 1. Clone the repo 
 
-2. Create your project as a python package (e.g. *AlgoExample*) under `algopkg` directory with this layout:
+2. To convert your original algorithm with model, create your project as a python package (e.g. *AlgoExample*) under `algopkg` directory with this layout:
 
    ```bash
    algopkg/
    ├── AlgoExample
-       ├── backend.py
-       └── __init__.py
+       ├── __init__.py
+       └── backend.py
+   ├── YourAlgoPkgName
+       ├── __init__.py
+       ├── backend.py
+       └── other_denpendency_files_you_need.py
    ```
 
-   `AlgoExample` is the name of your package directory. This name is free to modify and suggesting naming by the core algorithm in your project.  (FaceDetection e.g.)  In addition,  your full project dependency modules should under this package directory.
+   `AlgoExample` is the default package example with two vital models (`__init__.py` and `backend.py`)you need to have. You can use it as a template or a reference.
 
-   `backend.py`   This python file is the main entry of your model processing backend in project and the filename should not be altered.  There are only a few methods and names you need to add and modify down below referring to your own model processing workflow: 
+   `YourAlgoPkgName` is the name of the package directory that you should create. This name is free to modify and suggesting naming by the core algorithm in your project.  (FaceDetection e.g.)  In addition,  your full project dependency modules should under this package directory.
+
+   `backend.py`   This python file is the main entry of your model processing backend in project and the filename should not be altered. Please copy it from  `AlgoExample/backend.py` and rewrite. There are only a few methods and names you need to add and modify down below referring to your own model processing workflow: 
 
    ```python
    import sys, os, socket, time, traceback
@@ -54,7 +62,7 @@ Project-ready docker image with:
                    for p in model_path_lst:
                        assert os.path.exists(p) == True, "Model Not Found"
                    self._model_init(model_path_lst)
-                   print("[Model Initialized Successfully] load model from : {}".format(model_path))
+                   print("[Model Initialized Successfully] load model from : {}".format(model_path_lst))
            except Exception:
                print("[Model Initialized Failed]:")
                traceback.print_exc()
@@ -87,9 +95,9 @@ Project-ready docker image with:
 
    Add or change by user:
 
-   `def _model_init(self, model_path)` : Initialize and load your backend model for long running .
+   `def _model_init(self, model_path_lst)` : Initialize and load your backend model for long running. Get your model path from argument `model_path_lst` with index. Considering more than one model is possibly needed in the initialization step, this argument is a list. And it can be set in the next test step in script `algopkg_test.py` with global variable `MODEL_NAME`, don't worry too much right now.
 
-   `def _model_inference(self, param_dict)` : grab all parameters you need from param_dict and run your model.  When finish, return your model results. (but it's ok to leave it empty ) 
+   `def _model_inference(self, param_dict)` : grab all the model inputs and parameters you need from `param_dict` and run your model.  When finish, return your model results. Argument `param_dict` can also be set and tested in next test step.
 
    `class algo_backend(object)` : The class name should be considered to change by your own.
 
@@ -103,7 +111,7 @@ Project-ready docker image with:
    ''' Change by user '''
    ALGO_PKG_NAME = 'AlgoExample'
    BACKEND_CLS_NAME = 'algo_backend'
-   MODEL_ABS_PATH = '/Model_ZOO/algoexample_model_v1.pb'
+   MODEL_NAME = 'algoexample_model_v1.pb' # put your model in folder named Model_ZOO
    PARAM_DICT = {}
    ```
 
@@ -146,7 +154,7 @@ Project-ready docker image with:
    # check out the dockerfile: https://hub.docker.com/r/eum814/modelserve_env
    
    # Head node
-   docker run --shm-size=4G -d --gpus all \
+   docker run --shm-size=8G -d --gpus all \
               -e TZ="Asia/Shanghai" \
               -v /:/mnt \
               -w /mnt/opt/modelserve/ \
@@ -201,7 +209,7 @@ Project-ready docker image with:
 
    check out `./test/server_test.py` You can send your request and test the response from server. 
 
-> If you need to modify your code in your algopkg, please firstly stop the serve using command "ray stop",  then start the serve and run controller.py
+> If you need to modify your code in your algopkg and restart your serve, please firstly comment your algo config part in conf.ini and run controller.py to stop your serve.  After finished your code just uncomment your config part and run controller.py again.
 >
 
 
