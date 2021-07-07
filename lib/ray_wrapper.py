@@ -1,6 +1,8 @@
 import ray
 from ray import serve
 from ray.serve.exceptions import RayServeException
+from starlette.middleware import Middleware
+from starlette.middleware.cors import CORSMiddleware
 
 import requests
 import traceback
@@ -22,7 +24,10 @@ class RAY(object):
         ray.init(address="auto")
         nodes_info = ray.nodes()
         try:
-            self.client = serve.start(http_options={"location": "EveryNode", "host":"0.0.0.0", "port":port}, detached=True)
+            self.client = serve.start(http_options={"location": "EveryNode", "host":"0.0.0.0", "port":port, "middlewares": [
+        Middleware(
+            CORSMiddleware, allow_origins=["*"], allow_methods=["*"])
+    ]}, detached=True)
             self.log.info("Ray serve initialized, node number: {} \n Nodes Info: {}".format(len(nodes_info), nodes_info))
 
         except RayServeException:
@@ -71,7 +76,3 @@ class RAY(object):
     def endpoint_delete(self, endpoint_name):
         self.client.delete_endpoint(endpoint_name)
         self.log.info("Endpoint deleted, endpoint_name:{}".format(endpoint_name))
-
-
-
-

@@ -101,7 +101,7 @@ you should do is freezing your algorithm dependencies as requirements.txt
 
    `class algo_backend(object)` : The class name should be considered to change by your own.
 
-   ***Caution*: Please import your dependencies within these method functions** 
+   ***Caution*: Please import your dependencies within these method functions** **, import path source root should from algopkg** (e.g. from algopkg.YourAlgoPkgName.xxx import xxx)
 
 3. Test your package
 
@@ -210,7 +210,6 @@ you should do is freezing your algorithm dependencies as requirements.txt
    check out `./test/server_test.py` You can send your request and test the response from server. 
 
 > If you need to modify your code in your algopkg and restart your serve, please firstly comment your algo config part in conf.ini and run controller.py to stop your serve.  After finished your code just uncomment your config part and run controller.py again.
->
 
 
 
