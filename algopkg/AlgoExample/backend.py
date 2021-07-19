@@ -41,7 +41,7 @@ class algo_backend(object):
 
     def _model_inference(self, param_dict):
         # Add by user
-        pass
+        return param_dict
 
     async def __call__(self, starlette_request):
         try:
