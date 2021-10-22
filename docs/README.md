@@ -2,6 +2,8 @@
 
 # Model Serving 分布式模型服务
 
+![image](https://github.com/defangc23/ModelServing/blob/master/docs/architecture.png)
+
 This model serving framework is built on top of the powerful distributed library Ray and providing further simplified configurations to parallelize and accelerate machine learning workloads.
 
 
@@ -15,7 +17,7 @@ This model serving framework is built on top of the powerful distributed library
 Project-ready docker image already integrated with:
 
 - python == 3.6
-- ray[serve] == 2.0.0 dev0
+- ray[serve] == 1.3.0
 
 you should do is freezing your algorithm dependencies as requirements.txt
 
