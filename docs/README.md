@@ -215,6 +215,14 @@ you should do is freezing your algorithm dependencies as requirements.txt
 
 
 
+###### Run by script
+
+If you want to run modelserving as a bash script, please refer to /bin folder.
+
+
+
+
+
 ## Debug
 
 
